@@ -47,6 +47,9 @@ export interface Player {
   featured: boolean;
   bio?: string | null;
   stats?: { label: string; value: string }[];
+  verified?: boolean;
+  level?: string | null;
+  age?: number | null;
 }
 
 export type PostType = "news" | "blog";
@@ -112,6 +115,22 @@ export interface Match {
   clock: string | null;
   court: string | null;
   scheduled_at: string | null;
+  stage?: string | null;
+}
+
+/** Open trials, scholarships and sports-quota admissions, from `web_trials`. */
+export type TrialKind = "trial" | "scholarship" | "quota";
+
+export interface Trial {
+  id: string;
+  kind: TrialKind;
+  organizer: string;
+  title: string;
+  sport: string;
+  city: string;
+  deadline: string | null;
+  eligibility: string | null;
+  verified: boolean;
 }
 
 export interface LiveEvent {

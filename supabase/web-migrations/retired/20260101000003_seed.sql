@@ -1,6 +1,7 @@
 -- ============================================================================
 -- Sportika — seed content (mirrors src/lib/seed.ts so editors can manage rows
--- in Supabase without a deploy). Uses ON CONFLICT DO NOTHING to stay idempotent.
+-- in Supabase without a deploy). Every insert is guarded so re-running never
+-- duplicates rows on the shared database.
 -- ============================================================================
 
 insert into public.tournaments (slug,name,sport,city,status,status_label,prize,date_label,venue,teams_label,entry_fee,capacity,start_date,end_date,cover_image,description) values
@@ -31,54 +32,102 @@ insert into public.posts (slug,type,category,title,excerpt,cover_image,published
  ('running-a-tournament','blog','TIPS','Running a tournament without losing money','Budgeting, fees, sponsorship, and the pitfalls.','https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1400&q=70&auto=format&fit=crop','5 min read','Lock your venue and pricing first.')
 on conflict (slug) do nothing;
 
-insert into public.champions (sport,tournament,year,winner,runner_up,score,image) values
+insert into public.champions (sport,tournament,year,winner,runner_up,score,image)
+select v.sport, v.tournament, v.year, v.winner, v.runner_up, v.score, v.image
+from (values
  ('Football · Team','Sportika 5-a-side Football League','Oct 2026','DHA Strikers','Clifton United','3-2','https://images.unsplash.com/photo-1526232761682-d26e03ac148e?w=1400&q=70&auto=format&fit=crop'),
  ('Futsal · Dec 2025','Karachi Futsal Super Cup','Dec 2025','Karachi Falcons','Lahore Lions','5-4','https://images.unsplash.com/photo-1543326727-cf6c39e8f84c?w=1400&q=70&auto=format&fit=crop'),
  ('Badminton · 2026','Karachi Badminton Classic','2026','Sara Khan','Ayesha Malik','21-17, 21-19','https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=1400&q=70&auto=format&fit=crop'),
- ('Chess · 2026','Sindh Chess Championship','2026','Zain Abbas','Omar Sheikh',null,'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1400&q=70&auto=format&fit=crop');
+ ('Chess · 2026','Sindh Chess Championship','2026','Zain Abbas','Omar Sheikh',null,'https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1400&q=70&auto=format&fit=crop')
+) as v(sport,tournament,year,winner,runner_up,score,image)
+where not exists (
+  select 1 from public.champions c
+  where c.sport = v.sport and c.tournament = v.tournament and c.year = v.year
+);
 
-insert into public.podcast_episodes (episode_no,title,description,duration,cover_image) values
+insert into public.podcast_episodes (episode_no,title,description,duration,cover_image)
+select v.episode_no, v.title, v.description, v.duration, v.cover_image
+from (values
  (9,'From Karachi gullies to the national squad','How a street cricketer got noticed, and what the road to the top really takes.','45 min','https://images.unsplash.com/photo-1577223625816-7546f13df25d?w=1400&q=70&auto=format&fit=crop'),
  (8,'Running a league on a student budget',null,'42 min','https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=1400&q=70&auto=format&fit=crop'),
- (7,'Women in Karachi padel',null,'38 min','https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=1400&q=70&auto=format&fit=crop');
+ (7,'Women in Karachi padel',null,'38 min','https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=1400&q=70&auto=format&fit=crop')
+) as v(episode_no,title,description,duration,cover_image)
+where not exists (
+  select 1 from public.podcast_episodes p where p.episode_no = v.episode_no
+);
 
-insert into public.gallery_items (album,album_slug,caption,image) values
+insert into public.gallery_items (album,album_slug,caption,image)
+select v.album, v.album_slug, v.caption, v.image
+from (values
  ('IQRAVERSE','iqraverse','Campus sports festival','https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=1400&q=70&auto=format&fit=crop'),
  ('SPPL','sppl','Padel Premier League','https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1400&q=70&auto=format&fit=crop'),
  ('SFPL','sfpl','Futsal Premier League','https://images.unsplash.com/photo-1593341646782-e0b495cff86d?w=1400&q=70&auto=format&fit=crop'),
  ('Chess','chess','Sindh Chess Championship','https://images.unsplash.com/photo-1528819622765-d6bcf132f793?w=1400&q=70&auto=format&fit=crop'),
- ('Summer Sports Fiesta','ssf','Summer Sports Fiesta','https://images.unsplash.com/photo-1551958219-acbc608c6377?w=1400&q=70&auto=format&fit=crop');
+ ('Summer Sports Fiesta','ssf','Summer Sports Fiesta','https://images.unsplash.com/photo-1551958219-acbc608c6377?w=1400&q=70&auto=format&fit=crop')
+) as v(album,album_slug,caption,image)
+where not exists (
+  select 1 from public.gallery_items g
+  where g.album_slug = v.album_slug and g.caption = v.caption
+);
 
-insert into public.sponsors (name,position) values
- ('Tapmad',1),('Quice',2),('Leisure Leagues',3),('Nutrilov',4),('Champions Club',5),('Iqra University',6);
+insert into public.sponsors (name,position)
+select v.name, v.position
+from (values
+ ('Tapmad',1),('Quice',2),('Leisure Leagues',3),('Nutrilov',4),('Champions Club',5),('Iqra University',6)
+) as v(name,position)
+where not exists (select 1 from public.sponsors s where s.name = v.name);
 
-insert into public.coaches (name,title,sport,city,image,blurb) values
+insert into public.coaches (name,title,sport,city,image,blurb)
+select v.name, v.title, v.sport, v.city, v.image, v.blurb
+from (values
  ('Imran Yousuf','Head Cricket Coach','Cricket','Karachi','https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=1400&q=70&auto=format&fit=crop','15 years coaching juniors and university sides.'),
  ('Nadia Aslam','Badminton Coach','Badminton','Karachi','https://images.unsplash.com/photo-1526232761682-d26e03ac148e?w=1400&q=70&auto=format&fit=crop','National-level singles specialist.'),
  ('Faisal Raza','Futsal Coach','Futsal','Karachi','https://images.unsplash.com/photo-1577223625816-7546f13df25d?w=1400&q=70&auto=format&fit=crop','SFPL-winning head coach.'),
- ('Hira Shah','Padel Coach','Padel','Lahore','https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1400&q=70&auto=format&fit=crop','Former pro tour player.');
+ ('Hira Shah','Padel Coach','Padel','Lahore','https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1400&q=70&auto=format&fit=crop','Former pro tour player.')
+) as v(name,title,sport,city,image,blurb)
+where not exists (select 1 from public.coaches c where c.name = v.name);
 
-insert into public.ambassadors (name,title,city,image,blurb) values
+insert into public.ambassadors (name,title,city,image,blurb)
+select v.name, v.title, v.city, v.image, v.blurb
+from (values
  ('Areeba Khan','Iqra University','Karachi','https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=1400&q=70&auto=format&fit=crop','Runs campus tournaments and trials.'),
  ('Daniyal Haider','FAST NUCES','Karachi','https://images.unsplash.com/photo-1531415074968-036ba1b575da?w=1400&q=70&auto=format&fit=crop','Leads the esports society.'),
- ('Maria Siddiqui','University of Karachi','Karachi','https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1400&q=70&auto=format&fit=crop','Women''s cricket ambassador.');
+ ('Maria Siddiqui','University of Karachi','Karachi','https://images.unsplash.com/photo-1517649763962-0c623066013b?w=1400&q=70&auto=format&fit=crop','Women''s cricket ambassador.')
+) as v(name,title,city,image,blurb)
+where not exists (select 1 from public.ambassadors a where a.name = v.name);
 
-insert into public.societies (name,title,sport,city,image,blurb) values
+insert into public.societies (name,title,sport,city,image,blurb)
+select v.name, v.title, v.sport, v.city, v.image, v.blurb
+from (values
  ('Iqra University Sports Society','University','Multi','Karachi','https://images.unsplash.com/photo-1624526267942-ab0ff8a3e972?w=1400&q=70&auto=format&fit=crop','Runs IQRAVERSE and eight intramural leagues.'),
  ('Karachi Futsal Club','Club','Futsal','Karachi','https://images.unsplash.com/photo-1517927033932-b3d18e61fb3a?w=1400&q=70&auto=format&fit=crop','Home of the SFPL.'),
- ('Sindh Chess Association','Association','Chess','Karachi','https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1400&q=70&auto=format&fit=crop','Sanctions rating and district events.');
+ ('Sindh Chess Association','Association','Chess','Karachi','https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=1400&q=70&auto=format&fit=crop','Sanctions rating and district events.')
+) as v(name,title,sport,city,image,blurb)
+where not exists (select 1 from public.societies s where s.name = v.name);
 
-insert into public.team_members (name,title,city,image,blurb) values
+insert into public.team_members (name,title,city,image,blurb)
+select v.name, v.title, v.city, v.image, v.blurb
+from (values
  ('Seebu','Founder','Karachi','https://images.unsplash.com/photo-1593341646782-e0b495cff86d?w=1400&q=70&auto=format&fit=crop','Started Sportika as a student club in 2023.'),
  ('Zoya Ahmed','Head of Events','Karachi','https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=1400&q=70&auto=format&fit=crop','Runs tournaments end to end.'),
- ('Bilal Ahmed','Head of Media','Karachi','https://images.unsplash.com/photo-1526232761682-d26e03ac148e?w=1400&q=70&auto=format&fit=crop','Leads coverage, podcasts and the gallery.');
+ ('Bilal Ahmed','Head of Media','Karachi','https://images.unsplash.com/photo-1526232761682-d26e03ac148e?w=1400&q=70&auto=format&fit=crop','Leads coverage, podcasts and the gallery.')
+) as v(name,title,city,image,blurb)
+where not exists (select 1 from public.team_members tm where tm.name = v.name);
 
--- Matches + live events for the futsal cup (slug must exist first).
-with m as (
+-- Matches + live events for the futsal cup. Only insert matches that do not yet
+-- exist, then append a timeline event for each newly created match.
+with inserted as (
   insert into public.matches (tournament_slug,team_a,team_b,score_a,score_b,status,clock,court,scheduled_at)
-  values ('karachi-futsal-cup','Karachi Falcons','Lahore Lions',5,4,'live','2nd half','Court 1','2026-11-01T16:00:00Z'),
-         ('karachi-futsal-cup','Sindh University','FAST',2,2,'live','1st half','Court 2','2026-11-01T17:00:00Z')
+  select v.tournament_slug, v.team_a, v.team_b, v.score_a, v.score_b, v.status, v.clock, v.court, v.scheduled_at
+  from (values
+    ('karachi-futsal-cup','Karachi Falcons','Lahore Lions',5,4,'live','2nd half','Court 1','2026-11-01T16:00:00Z'::timestamptz),
+    ('karachi-futsal-cup','Sindh University','FAST',2,2,'live','1st half','Court 2','2026-11-01T17:00:00Z'::timestamptz)
+  ) as v(tournament_slug,team_a,team_b,score_a,score_b,status,clock,court,scheduled_at)
+  where not exists (
+    select 1 from public.matches m
+    where m.tournament_slug = v.tournament_slug and m.team_a = v.team_a and m.team_b = v.team_b
+  )
   returning id, team_a
 )
 insert into public.live_events (match_id,type,detail,minute)
-select id,'score','Goal — '||team_a,34 from m;
+select id,'score','Goal — '||team_a,34 from inserted;

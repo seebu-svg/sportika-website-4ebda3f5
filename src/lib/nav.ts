@@ -33,7 +33,7 @@ export const NAV: NavItem[] = [
       { href: "/facilities", label: "Facilities and venues", desc: "Courts, grounds and halls near you" },
       { href: "/services", label: "Hire Sportika", desc: "We run your event end to end" },
     ],
-    feature: { kicker: "LIVE NOW", title: "Karachi Inter-University Futsal Cup", href: "/tournaments/karachi-futsal-cup", cta: "View tournament" },
+    feature: { kicker: "LIVE NOW", title: "Every live and upcoming event", href: "/tournaments", cta: "View tournaments" },
   },
   {
     title: "Players",
@@ -46,7 +46,7 @@ export const NAV: NavItem[] = [
       { href: "/join-player", label: "Join as a player", desc: "Build your free profile" },
       { href: "/faqs#verify", label: "Get verified", desc: "How the verified badge works" },
     ],
-    feature: { kicker: "FEATURED ATHLETE", title: "Ahmed Raza, opening batter", href: "/players/ahmed-raza", cta: "View profile" },
+    feature: { kicker: "PLAYER DIRECTORY", title: "Athletes across Pakistan", href: "/players", cta: "Browse players" },
   },
   { title: "News", href: "/news" },
   { title: "Blogs", href: "/blogs" },

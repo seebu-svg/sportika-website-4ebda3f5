@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import { getTrials } from "@/lib/data";
+import type { Trial, TrialKind } from "@/lib/types";
+import { EmptyResults, FilterBar } from "@/components/filter-bar";
 import { PageHero, Sec } from "@/components/page-bits";
 
 export const metadata: Metadata = {
@@ -8,14 +11,61 @@ export const metadata: Metadata = {
 };
 export const revalidate = 3600;
 
-const TRIALS = [
-  { org: "Sindh Cricket Association", sport: "Cricket", city: "Karachi", when: "Trials 30 Nov", detail: "U-19 and senior men's selection trials for the domestic season. Register at the KB Cricket Centre." },
-  { org: "Karachi Futsal Club", sport: "Futsal", city: "Karachi", when: "Open until 25 Nov", detail: "SFPL roster trials for the upcoming season. Open to players 16+." },
-  { org: "PUSTECH Basketball", sport: "Basketball", city: "Karachi", when: "Combine 5 Dec", detail: "University team selection combine plus a merit-scholarship track for standout players." },
-  { org: "National Padel Circuit", sport: "Padel", city: "Lahore", when: "Qualifiers 12 Dec", detail: "Regional qualifiers with a sponsored wildcard into the national main draw." },
+type Params = { tab?: string; q?: string };
+
+const KINDS: { key: TrialKind; label: string }[] = [
+  { key: "trial", label: "Trials" },
+  { key: "scholarship", label: "Scholarships" },
+  { key: "quota", label: "Sports quota" },
 ];
 
-export default function TrialsPage() {
+const KIND_LABEL: Record<TrialKind, string> = {
+  trial: "TRIAL",
+  scholarship: "SCHOLARSHIP",
+  quota: "SPORTS QUOTA",
+};
+
+function deadlineLabel(iso: string | null): string {
+  if (!iso) return "Open until filled";
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return "Open until filled";
+  return `Closes ${d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}`;
+}
+
+function TrialCard({ trial }: { trial: Trial }) {
+  return (
+    <div className="card" style={{ padding: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <div style={{ minWidth: 0 }}>
+          <small>
+            {KIND_LABEL[trial.kind]} · {trial.sport.toUpperCase()} · {trial.city.toUpperCase()}
+          </small>
+          <h3 style={{ fontSize: 18, margin: "4px 0" }}>{trial.title}</h3>
+          <p style={{ margin: 0, color: "var(--mute)", fontSize: 14.5 }}>
+            <b style={{ color: "var(--ink)" }}>{trial.organizer}</b>
+            {trial.eligibility ? ` — ${trial.eligibility}` : ""}
+          </p>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, flex: "none" }}>
+          {trial.verified && <span className="pill p-open" style={{ position: "static" }}>VERIFIED</span>}
+          <span style={{ fontSize: 13, color: "var(--mute)" }}>{deadlineLabel(trial.deadline)}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default async function TrialsPage({ searchParams }: { searchParams: Promise<Params> }) {
+  const { tab = "all", q = "" } = await searchParams;
+  const trials = await getTrials();
+  const needle = q.trim().toLowerCase();
+
+  const shown = trials.filter((t) => {
+    if (tab !== "all" && t.kind !== tab) return false;
+    if (needle && !`${t.organizer} ${t.title} ${t.sport} ${t.city}`.toLowerCase().includes(needle)) return false;
+    return true;
+  });
+
   return (
     <>
       <PageHero
@@ -25,20 +75,28 @@ export default function TrialsPage() {
         crumbs={[{ name: "Home", href: "/" }, { name: "Trials", href: "/trials" }]}
       />
       <Sec>
-        <div style={{ display: "grid", gap: 14, maxWidth: 860 }}>
-          {TRIALS.map((t) => (
-            <div key={t.org} className="card" style={{ padding: 20 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                <div>
-                  <small>{t.sport.toUpperCase()} · {t.city.toUpperCase()}</small>
-                  <h3 style={{ fontSize: 18, margin: "4px 0" }}>{t.org}</h3>
-                  <p style={{ margin: 0, color: "var(--mute)", fontSize: 14.5 }}>{t.detail}</p>
-                </div>
-                <span className="pill p-open" style={{ position: "static", flex: "none", height: "fit-content" }}>{t.when}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+        <FilterBar
+          base="/trials"
+          count={shown.length}
+          total={trials.length}
+          tab={tab}
+          q={q}
+          tabs={[
+            { key: "all", label: "Everything", count: trials.length },
+            ...KINDS.map((k) => ({ key: k.key, label: k.label, count: trials.filter((t) => t.kind === k.key).length })),
+          ]}
+        />
+
+        {shown.length ? (
+          <div style={{ display: "grid", gap: 14, maxWidth: 860 }}>
+            {shown.map((t) => (
+              <TrialCard key={t.id} trial={t} />
+            ))}
+          </div>
+        ) : (
+          <EmptyResults hint="No trial or scholarship matches that search. Try another sport, city or type." />
+        )}
+
         <div className="nudge">
           <p><b>Hosting trials?</b> List them here for free and reach verified athletes.</p>
           <a href="/contact?topic=trials">Post a trial →</a>

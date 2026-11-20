@@ -137,9 +137,6 @@ export function SiteHeader() {
             <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
           </button>
           <ThemeToggle />
-          <Link className="sx-ic" href="/login" aria-label="Log in" style={{ borderRadius: 99, width: "auto", padding: "0 16px", fontSize: 14, fontWeight: 700 }}>
-            Log in
-          </Link>
           <a className="sx-jn" href="#" onClick={(e) => { e.preventDefault(); open(); }}>
             Join<span className="jz-s">&nbsp;Sportika</span>
           </a>

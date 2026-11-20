@@ -20,7 +20,7 @@ export async function submitContact(_prev: ActionResult | null, formData: FormDa
     return { ok: false, message: parsed.error.issues[0]?.message ?? "Please check the form." };
   }
   const { phone, topic, ...rest } = parsed.data;
-  const res = await insertOrSimulate("contact_submissions", {
+  const res = await insertOrSimulate("web_contact_submissions", {
     ...rest,
     phone: phone || null,
     topic: topic || "general",

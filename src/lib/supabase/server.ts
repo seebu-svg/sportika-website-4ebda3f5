@@ -3,8 +3,9 @@ import { cookies } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isSupabaseConfigured } from "./client";
 
-// Server client for RSC, server actions and route handlers. Reads/writes the
-// auth cookies via @supabase/ssr. Returns null when Supabase isn't configured.
+// Server client for RSC and server actions. The public site is anonymous, so
+// there is no session to persist; cookie writes are still routed so the SSR
+// client never warns. Returns null when Supabase isn't configured.
 export async function getServerClient(): Promise<SupabaseClient | null> {
   if (!isSupabaseConfigured()) return null;
   const cookieStore = await cookies();
@@ -22,7 +23,7 @@ export async function getServerClient(): Promise<SupabaseClient | null> {
               cookieStore.set(name, value, options),
             );
           } catch {
-            // Called from a Server Component: safe to ignore, middleware refreshes sessions.
+            // Called from a Server Component: safe to ignore, sessions are unused.
           }
         },
       },

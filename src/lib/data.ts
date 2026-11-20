@@ -13,6 +13,7 @@ import type {
   PostType,
   RankingRow,
   Tournament,
+  Trial,
   Venue,
 } from "./types";
 
@@ -61,7 +62,7 @@ export function getTournaments(): Promise<Tournament[]> {
   return tryQuery(async () => {
     const sb = await getServerClient();
     const { data, error } = await sb!
-      .from("tournaments")
+      .from("web_events")
       .select("*")
       .in("status", ["published", "live", "completed"])
       .order("start_date", { ascending: true });
@@ -91,13 +92,16 @@ function mapPlayer(r: Record<string, unknown>): Player {
     featured: Boolean(r.featured),
     bio: (r.bio as string) ?? null,
     stats: (r.stats as Player["stats"]) ?? [],
+    verified: Boolean(r.verified),
+    level: (r.level as string) ?? null,
+    age: (r.age as number) ?? null,
   };
 }
 
 export function getPlayers(): Promise<Player[]> {
   return tryQuery(async () => {
     const sb = await getServerClient();
-    const { data, error } = await sb!.from("players").select("*").order("rating", { ascending: false });
+    const { data, error } = await sb!.from("web_players").select("*").order("name", { ascending: true });
     if (error || !data) throw error ?? new Error("empty");
     return data.map(mapPlayer);
   }, seed.PLAYERS);
@@ -105,7 +109,10 @@ export function getPlayers(): Promise<Player[]> {
 
 export async function getFeaturedPlayers(): Promise<Player[]> {
   const all = await getPlayers();
-  return all.filter((p) => p.featured).slice(0, 4);
+  // Nothing is explicitly featured (the mobile app has no such flag), so fall
+  // back to the first few complete profiles rather than an empty section.
+  const featured = all.filter((p) => p.featured);
+  return (featured.length ? featured : all).slice(0, 4);
 }
 
 export async function getPlayer(slug: string): Promise<Player | null> {
@@ -131,7 +138,7 @@ function mapPost(r: Record<string, unknown>): Post {
 export function getPosts(type: PostType): Promise<Post[]> {
   return tryQuery(async () => {
     const sb = await getServerClient();
-    const { data, error } = await sb!.from("posts").select("*").eq("type", type).eq("status", "published");
+    const { data, error } = await sb!.from("web_posts").select("*").eq("type", type).eq("status", "published");
     if (error || !data) throw error ?? new Error("empty");
     return data.map(mapPost);
   }, type === "news" ? seed.NEWS : seed.BLOGS);
@@ -160,7 +167,7 @@ function mapChampion(r: Record<string, unknown>): Champion {
 export function getChampions(): Promise<Champion[]> {
   return tryQuery(async () => {
     const sb = await getServerClient();
-    const { data, error } = await sb!.from("champions").select("*").order("year", { ascending: false });
+    const { data, error } = await sb!.from("web_champions").select("*").order("year", { ascending: false });
     if (error || !data) throw error ?? new Error("empty");
     return data.map(mapChampion);
   }, seed.CHAMPIONS);
@@ -183,7 +190,7 @@ function mapEpisode(r: Record<string, unknown>): PodcastEpisode {
 export function getEpisodes(): Promise<PodcastEpisode[]> {
   return tryQuery(async () => {
     const sb = await getServerClient();
-    const { data, error } = await sb!.from("podcast_episodes").select("*").order("episode_no", { ascending: false });
+    const { data, error } = await sb!.from("web_podcast_episodes").select("*").order("episode_no", { ascending: false });
     if (error || !data) throw error ?? new Error("empty");
     return data.map(mapEpisode);
   }, seed.PODCAST);
@@ -194,7 +201,7 @@ export function getEpisodes(): Promise<PodcastEpisode[]> {
 export function getGallery(): Promise<GalleryItem[]> {
   return tryQuery(async () => {
     const sb = await getServerClient();
-    const { data, error } = await sb!.from("gallery_items").select("*");
+    const { data, error } = await sb!.from("web_gallery_items").select("*");
     if (error || !data) throw error ?? new Error("empty");
     return data as GalleryItem[];
   }, seed.GALLERY);
@@ -217,7 +224,7 @@ function simpleMap(r: Record<string, unknown>): DirectoryPerson {
 export function getCoaches(): Promise<DirectoryPerson[]> {
   return tryQuery(async () => {
     const sb = await getServerClient();
-    const { data, error } = await sb!.from("coaches").select("*");
+    const { data, error } = await sb!.from("web_coaches").select("*");
     if (error || !data) throw error ?? new Error("empty");
     return data.map(simpleMap);
   }, seed.COACHES);
@@ -226,7 +233,7 @@ export function getCoaches(): Promise<DirectoryPerson[]> {
 export function getAmbassadors(): Promise<DirectoryPerson[]> {
   return tryQuery(async () => {
     const sb = await getServerClient();
-    const { data, error } = await sb!.from("ambassadors").select("*");
+    const { data, error } = await sb!.from("web_ambassadors").select("*");
     if (error || !data) throw error ?? new Error("empty");
     return data.map(simpleMap);
   }, seed.AMBASSADORS);
@@ -235,7 +242,7 @@ export function getAmbassadors(): Promise<DirectoryPerson[]> {
 export function getSocieties(): Promise<DirectoryPerson[]> {
   return tryQuery(async () => {
     const sb = await getServerClient();
-    const { data, error } = await sb!.from("societies").select("*");
+    const { data, error } = await sb!.from("web_societies").select("*");
     if (error || !data) throw error ?? new Error("empty");
     return data.map(simpleMap);
   }, seed.SOCIETIES);
@@ -244,7 +251,7 @@ export function getSocieties(): Promise<DirectoryPerson[]> {
 export function getTeam(): Promise<DirectoryPerson[]> {
   return tryQuery(async () => {
     const sb = await getServerClient();
-    const { data, error } = await sb!.from("team_members").select("*");
+    const { data, error } = await sb!.from("web_team_members").select("*");
     if (error || !data) throw error ?? new Error("empty");
     return data.map(simpleMap);
   }, seed.TEAM);
@@ -270,7 +277,7 @@ function mapMatch(r: Record<string, unknown>): Match {
 export function getLiveMatches(): Promise<Match[]> {
   return tryQuery(async () => {
     const sb = await getServerClient();
-    const { data, error } = await sb!.from("matches").select("*").eq("status", "live");
+    const { data, error } = await sb!.from("web_event_matches").select("*").eq("status", "live");
     if (error || !data) throw error ?? new Error("empty");
     return data.map(mapMatch);
   }, seed.MATCHES.filter((m) => m.status === "live"));
@@ -279,7 +286,7 @@ export function getLiveMatches(): Promise<Match[]> {
 export function getMatches(tournamentSlug: string): Promise<Match[]> {
   return tryQuery(async () => {
     const sb = await getServerClient();
-    const { data, error } = await sb!.from("matches").select("*").eq("tournament_slug", tournamentSlug);
+    const { data, error } = await sb!.from("web_event_matches").select("*").eq("tournament_slug", tournamentSlug);
     if (error || !data) throw error ?? new Error("empty");
     return data.map(mapMatch);
   }, seed.MATCHES.filter((m) => m.tournament_slug === tournamentSlug));
@@ -290,7 +297,7 @@ export function getMatches(tournamentSlug: string): Promise<Match[]> {
 export function getSponsors(): Promise<string[]> {
   return tryQuery(async () => {
     const sb = await getServerClient();
-    const { data, error } = await sb!.from("sponsors").select("name").order("position");
+    const { data, error } = await sb!.from("web_sponsors").select("name").order("position");
     if (error || !data) throw error ?? new Error("empty");
     return data.map((r: { name: string }) => r.name);
   }, seed.SPONSORS);
@@ -321,7 +328,7 @@ function mapClub(r: Record<string, unknown>): Club {
 export function getClubs(): Promise<Club[]> {
   return tryQuery(async () => {
     const sb = await getServerClient();
-    const { data, error } = await sb!.from("clubs").select("*");
+    const { data, error } = await sb!.from("web_clubs").select("*");
     if (error || !data) throw error ?? new Error("empty");
     // An unseeded table should not blank out a public directory page.
     return data.length ? data.map(mapClub) : seed.CLUBS;
@@ -355,7 +362,7 @@ function mapVenue(r: Record<string, unknown>): Venue {
 export function getVenues(): Promise<Venue[]> {
   return tryQuery(async () => {
     const sb = await getServerClient();
-    const { data, error } = await sb!.from("venues").select("*");
+    const { data, error } = await sb!.from("web_venues").select("*");
     if (error || !data) throw error ?? new Error("empty");
     return data.length ? data.map(mapVenue) : seed.VENUES;
   }, seed.VENUES);
@@ -375,7 +382,7 @@ export async function getRankings(sport: string, city: string): Promise<RankingR
   return tryQuery(async () => {
     const sb = await getServerClient();
     const { data, error } = await sb!
-      .from("rankings")
+      .from("web_rankings")
       .select("*")
       .eq("sport", sport)
       .eq("city", city)
@@ -392,6 +399,32 @@ export async function getRankings(sport: string, city: string): Promise<RankingR
       delta: Number(r.delta ?? 0),
     }));
   }, fallback);
+}
+
+/* --------------------------------- trials -------------------------------- */
+
+function mapTrial(r: Record<string, unknown>): Trial {
+  return {
+    id: String(r.id),
+    kind: (r.kind as Trial["kind"]) ?? "trial",
+    organizer: String(r.organizer ?? ""),
+    title: String(r.title ?? ""),
+    sport: String(r.sport ?? ""),
+    city: String(r.city ?? ""),
+    deadline: (r.deadline as string) ?? null,
+    eligibility: (r.eligibility as string) ?? null,
+    verified: Boolean(r.verified),
+  };
+}
+
+// Open trials, scholarships and sports-quota seats, ordered as curated.
+export function getTrials(): Promise<Trial[]> {
+  return tryQuery(async () => {
+    const sb = await getServerClient();
+    const { data, error } = await sb!.from("web_trials").select("*").order("sort_order", { ascending: true });
+    if (error || !data || data.length === 0) throw error ?? new Error("empty");
+    return data.map(mapTrial);
+  }, seed.TRIALS);
 }
 
 /* ------------------------------ filter vocabularies ------------------------ */

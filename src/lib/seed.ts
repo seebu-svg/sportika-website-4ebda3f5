@@ -10,6 +10,7 @@ import type {
   RankingRow,
   SportField,
   Tournament,
+  Trial,
   Venue,
 } from "./types";
 
@@ -141,6 +142,22 @@ export const TEAM: DirectoryPerson[] = [
 export const MATCHES: Match[] = [
   { id: "m1", tournament_slug: "karachi-futsal-cup", team_a: "Karachi Falcons", team_b: "Lahore Lions", score_a: 5, score_b: 4, status: "live", clock: "2nd half", court: "Court 1", scheduled_at: "2026-11-01T16:00:00Z" },
   { id: "m2", tournament_slug: "karachi-futsal-cup", team_a: "Sindh University", team_b: "FAST", score_a: 2, score_b: 2, status: "live", clock: "1st half", court: "Court 2", scheduled_at: "2026-11-01T17:00:00Z" },
+];
+
+/* --------------------------------- trials --------------------------------- */
+
+// Mirrors the prototype's trials / scholarship / sports-quota list so the page
+// still reads correctly when Supabase is unreachable.
+export const TRIALS: Trial[] = [
+  { id: "trial-clifton-cricket-academy-open-trials-fast-bowlers", kind: "trial", organizer: "Clifton Cricket Academy", title: "Open trials: fast bowlers and openers, under 19", sport: "Cricket", city: "Karachi", deadline: "2026-11-15", eligibility: "Ages 15 to 19. Bring your own kit.", verified: true },
+  { id: "scholarship-metro-university-demo-sports-scholarship", kind: "scholarship", organizer: "Metro University (demo)", title: "Sports scholarship, Spring 2027 intake", sport: "Multi-sport", city: "Karachi", deadline: "2026-12-10", eligibility: "Provincial or national level players. Up to 100% tuition.", verified: true },
+  { id: "quota-city-university-demo-sports-quota-admissions", kind: "quota", organizer: "City University (demo)", title: "Sports quota admissions 2027", sport: "Multi-sport", city: "Karachi", deadline: "2026-12-20", eligibility: "Certificates of district level or above required.", verified: true },
+  { id: "trial-lahore-futsal-club-futsal-squad-trials", kind: "trial", organizer: "Lahore Futsal Club", title: "Futsal squad trials", sport: "Futsal", city: "Lahore", deadline: "2026-11-08", eligibility: "Ages 17 to 25. Registration at the venue.", verified: false },
+  { id: "scholarship-seaview-business-school-demo-merit-and-sports", kind: "scholarship", organizer: "Seaview Business School (demo)", title: "Merit and sports scholarship for athletes", sport: "Multi-sport", city: "Karachi", deadline: "2026-11-30", eligibility: "Represented school, college or province in any sport.", verified: true },
+  { id: "trial-provincial-badminton-body-demo-junior-team", kind: "trial", organizer: "Provincial Badminton Body (demo)", title: "Junior team selection trials", sport: "Badminton", city: "Karachi", deadline: "2026-11-12", eligibility: "Under 17 and under 19, boys and girls.", verified: true },
+  { id: "quota-engineering-university-demo-sports-quota", kind: "quota", organizer: "Engineering University (demo)", title: "Sports quota seats 2027", sport: "Multi-sport", city: "Karachi", deadline: "2027-01-05", eligibility: "Apply with your admission form and sports certificates.", verified: false },
+  { id: "scholarship-capital-university-demo-sports-grant", kind: "scholarship", organizer: "Capital University (demo)", title: "Sports grant for athletes", sport: "Multi-sport", city: "Lahore", deadline: "2027-01-15", eligibility: "Need-based, with sports achievements considered.", verified: false },
+  { id: "trial-islamabad-womens-cricket-club-womens-cricket", kind: "trial", organizer: "Islamabad Women's Cricket Club", title: "Women's cricket open trials", sport: "Cricket", city: "Islamabad", deadline: "2026-11-22", eligibility: "Ages 16 and above. All roles.", verified: true },
 ];
 
 /* ------------------------------------------------------------------------ *

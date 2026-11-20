@@ -1,10 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useId, useState } from "react";
 
 function Artwork() {
-  const id = Math.random().toString(36).slice(2, 8);
+  // A stable id keeps the server and client SVG markup identical.
+  const id = `ph-${useId().replace(/:/g, "")}`;
   return (
     <svg viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <defs>

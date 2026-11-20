@@ -27,19 +27,15 @@ export async function getMatchedEvents(tournamentSlug: string): Promise<MatchWit
   try {
     const sb = await getServerClient();
     const { data, error } = await sb!
-      .from("matches")
+      .from("web_event_matches")
       .select("*")
       .eq("tournament_slug", tournamentSlug)
+      .order("sort_order", { ascending: true })
       .order("scheduled_at", { ascending: true });
     if (error || !data) return fallback;
-    const matches = data as Match[];
-    const withEvents = await Promise.all(
-      matches.map(async (m) => {
-        const { data: evs } = await sb!.from("live_events").select("*").eq("match_id", m.id).order("minute", { ascending: false });
-        return { ...m, events: (evs as LiveEvent[]) ?? [] };
-      }),
-    );
-    return withEvents;
+    // The website has no write access to the mobile match_events feed, so the
+    // match centre renders the fixture/score data only.
+    return (data as Match[]).map((m) => ({ ...m, events: [] as LiveEvent[] }));
   } catch {
     return fallback;
   }

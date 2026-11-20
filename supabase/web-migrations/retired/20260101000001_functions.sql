@@ -32,8 +32,10 @@ begin
   return new;
 end $$;
 
-drop trigger if exists on_auth_user_created on auth.users;
-create trigger on_auth_user_created after insert on auth.users
+-- Namespaced trigger so we never clobber a trigger of another app sharing
+-- auth.users (e.g. the mobile backend). Only our own name is dropped/created.
+drop trigger if exists sportika_on_auth_user_created on auth.users;
+create trigger sportika_on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
 
 -- Record a live score + append a timeline event atomically. Called by organizers

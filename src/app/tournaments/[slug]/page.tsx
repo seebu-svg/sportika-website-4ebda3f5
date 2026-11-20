@@ -32,6 +32,14 @@ export default async function TournamentDetailPage({ params }: { params: Promise
 
   const matches = await getMatchedEvents(slug);
 
+  // Catalogue fixtures carry their stage ("Group A", "Quarter-final", "Main card");
+  // mobile fixtures have none, so fall back to grouping by status.
+  const stages = matches.reduce<Record<string, typeof matches>>((acc, m) => {
+    const key = m.stage || (m.status === "live" ? "Live now" : m.status === "finished" ? "Results" : "Upcoming fixtures");
+    (acc[key] ??= []).push(m);
+    return acc;
+  }, {});
+
   return (
     <>
       {breadcrumbsJsonLd([{ name: "Home", href: "/" }, { name: "Tournaments", href: "/tournaments" }, { name: t.name, href: `/tournaments/${t.slug}` }])}
@@ -89,11 +97,18 @@ export default async function TournamentDetailPage({ params }: { params: Promise
       {matches.length > 0 && (
         <Sec tint>
           <div className="head"><div><div className="kk">FIXTURES &amp; LIVE SCORES</div><h2>Match <em>centre</em></h2></div></div>
-          <div style={{ display: "grid", gap: 16, maxWidth: 760 }}>
-            {matches.map((m) => (
-              <LiveScoreboard key={m.id} match={m} initialEvents={m.events} />
-            ))}
-          </div>
+          {Object.entries(stages).map(([stage, rows]) => (
+            <div key={stage} style={{ marginBottom: 28 }}>
+              <h3 style={{ fontSize: 15, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--mute)", margin: "0 0 12px" }}>
+                {stage} <span style={{ opacity: 0.6 }}>· {rows.length}</span>
+              </h3>
+              <div style={{ display: "grid", gap: 16, maxWidth: 760 }}>
+                {rows.map((m) => (
+                  <LiveScoreboard key={m.id} match={m} initialEvents={m.events} />
+                ))}
+              </div>
+            </div>
+          ))}
         </Sec>
       )}
 

@@ -84,7 +84,7 @@ export async function submitJoinPlayer(_prev: ActionResult | null, formData: For
     }
   }
 
-  const res = await insertOrSimulate("join_requests", {
+  const res = await insertOrSimulate("web_join_requests", {
     ...data,
     height_cm: data.height_cm ? Number(data.height_cm) : undefined,
     weight_kg: data.weight_kg ? Number(data.weight_kg) : undefined,
@@ -145,7 +145,7 @@ export async function submitTournamentRequest(_prev: ActionResult | null, formDa
     return { ok: false, message: "Registration cannot close before it opens." };
   }
 
-  const res = await insertOrSimulate("tournament_requests", {
+  const res = await insertOrSimulate("web_tournament_requests", {
     ...data,
     entry_amount: data.entry_amount ? Number(data.entry_amount) : undefined,
     teams_count: data.teams_count ? Number(data.teams_count) : undefined,
@@ -169,7 +169,7 @@ export async function submitEarlyAccess(_prev: ActionResult | null, formData: Fo
   if (!isHuman(formData)) return { ok: false, message: "Submission rejected." };
   const parsed = earlyAccessSchema.safeParse(clean(formData));
   if (!parsed.success) return { ok: false, message: parsed.error.issues[0]?.message ?? "Please check the number." };
-  const res = await insertOrSimulate("early_access", { ...parsed.data, source: "organize" });
+  const res = await insertOrSimulate("web_early_access", { ...parsed.data, source: "organize" });
   revalidatePath("/organize");
   return res.ok ? { ok: true, message: "Done. We will message you on WhatsApp when the organizer app opens." } : res;
 }
